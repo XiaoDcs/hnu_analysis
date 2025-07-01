@@ -312,4 +312,16 @@ def comparison():
     return render_template("comparison.html", years=YEARS)
 
 if __name__ == "__main__":
-    app.run(debug=True) 
+    import os
+    
+    # 获取端口号，优先使用环境变量，默认为5000
+    port = int(os.environ.get('PORT', 5000))
+    
+    # 在生产环境中监听所有接口，在开发环境中只监听本地
+    host = '0.0.0.0' if os.environ.get('PORT') else '127.0.0.1'
+    
+    print(f"🚀 启动湖南大学广东省招生数据分析系统...")
+    print(f"📡 服务器地址: http://{host}:{port}")
+    print(f"📊 数据覆盖: 2020-2025年，353条记录")
+    
+    app.run(host=host, port=port, debug=not os.environ.get('PORT')) 

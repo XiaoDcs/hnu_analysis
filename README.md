@@ -298,4 +298,35 @@ headers = {
 
 Made with ❤️ by [XiaoDcs](https://github.com/XiaoDcs)
 
-</div> 
+</div>
+
+## 🌐 在线部署
+
+### 部署到Render
+
+1. **Fork仓库**到你的GitHub账号
+2. **登录Render**: https://render.com
+3. **创建新的Web Service**
+   - 连接你的GitHub仓库
+   - 选择`hnu_analysis`项目
+4. **配置部署**:
+   ```
+   Build Command: pip install -r requirements.txt
+   Start Command: gunicorn --bind 0.0.0.0:$PORT app:app
+   ```
+5. **环境变量**（可选）:
+   - `PYTHON_VERSION`: 3.8.10
+
+### 一键部署按钮
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/XiaoDcs/hnu_analysis)
+
+部署完成后，你将获得一个类似 `https://your-app.onrender.com` 的在线地址。
+
+### 部署说明
+
+- **启动时间**: 首次访问可能需要30-60秒冷启动
+- **免费套餐**: Render免费套餐完全支持本项目
+- **自动部署**: 推送到main分支将自动触发重新部署
+
+## 🔧 开发指南 
