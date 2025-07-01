@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <title>湖南大学 2020-2025 招生人数分析</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 2rem;
+        }
+        .controls {
+            margin-bottom: 1rem;
+        }
+        .nav-links {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .nav-links a {
+            color: #007bff;
+            text-decoration: none;
+            margin-right: 1rem;
+            padding: 0.5rem 1rem;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #007bff;
+        }
+        .nav-links a:hover {
+            background: #007bff;
+            color: white;
+        }
+        canvas {
+            max-width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>湖南大学 2020-2025 招生人数分析</h1>
+    
+    <div class="nav-links">
+        <a href="/guangdong">📊 广东省专业统计</a>
+        <span style="color: #6c757d;">专门查看广东省各专业历年招生数据</span>
+    </div>
+
+    <div class="controls">
+        <label for="yearSelect">选择年份: </label>
+        <select id="yearSelect">
+            {% for y in years %}
+            <option value="{{ y }}" {% if y == years[-1] %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+        </select>
+        &nbsp;&nbsp;
+        <label for="keywordInput">专业筛选 (zymc 包含): </label>
+        <input type="text" id="keywordInput" placeholder="输入关键词后回车"/>
+    </div>
+
+    <h3>年度招生总人数</h3>
+    <canvas id="yearChart" height="120"></canvas>
+
+    <h3>各省招生人数 (所选年度)</h3>
+    <canvas id="provinceChart" height="160"></canvas>
+
+    <script>
+        const yearSelect = document.getElementById('yearSelect');
+        const keywordInput = document.getElementById('keywordInput');
+
+        let yearChart, provinceChart;
+
+        function fetchData() {
+            const params = new URLSearchParams();
+            params.append('year', yearSelect.value);
+            if (keywordInput.value.trim()) {
+                params.append('keyword', keywordInput.value.trim());
+            }
+            fetch(`/api/analysis?${params.toString()}`)
+                .then(r => r.json())
+                .then(drawCharts);
+        }
+
+        function drawCharts(data) {
+            // ----- Yearly total chart -----
+            const years = Object.keys(data.year_totals);
+            const totals = Object.values(data.year_totals);
+
+            if (yearChart) yearChart.destroy();
+            yearChart = new Chart(
+                document.getElementById('yearChart').getContext('2d'),
+                {
+                    type: 'line',
+                    data: {
+                        labels: years,
+                        datasets: [{
+                            label: '总招生人数',
+                            data: totals,
+                            borderColor: '#007bff',
+                            fill: false,
+                            tension: 0.1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                            }
+                        }
+                    }
+                }
+            );
+
+            // ----- Province chart -----
+            const provinces = Object.keys(data.province_totals);
+            const provinceCounts = Object.values(data.province_totals);
+            if (provinceChart) provinceChart.destroy();
+            provinceChart = new Chart(
+                document.getElementById('provinceChart').getContext('2d'),
+                {
+                    type: 'bar',
+                    data: {
+                        labels: provinces,
+                        datasets: [{
+                            label: `${data.selected_year} 招生人数`,
+                            data: provinceCounts,
+                            backgroundColor: '#28a745'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        indexAxis: 'y',
+                        scales: {
+                            x: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                }
+            );
+        }
+
+        // Initial load
+        fetchData();
+
+        // Event listeners
+        yearSelect.addEventListener('change', fetchData);
+        keywordInput.addEventListener('keypress', e => {
+            if (e.key === 'Enter') {
+                fetchData();
+            }
+        });
+    </script>
+</body>
+</html> 

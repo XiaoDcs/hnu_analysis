@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <title>湖南大学 广东省 专业横向对比</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 2rem;
+            background-color: #f8f9fa;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #fd7e14 0%, #e83e8c 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .nav-links {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .nav-links a {
+            color: #007bff;
+            text-decoration: none;
+            margin-right: 1rem;
+            padding: 0.5rem 1rem;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #007bff;
+        }
+        
+        .nav-links a:hover {
+            background: #007bff;
+            color: white;
+        }
+        
+        .controls {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .controls label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .controls input, .controls select, .controls button {
+            padding: 8px 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .controls button {
+            background: #fd7e14;
+            color: white;
+            border-color: #fd7e14;
+            cursor: pointer;
+        }
+        
+        .controls button:hover {
+            background: #e3690b;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+        
+        .table-header {
+            background: #fd7e14;
+            color: white;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .comparison-table th {
+            background: #6c757d;
+            color: white;
+            padding: 12px;
+            text-align: center;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .comparison-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e9ecef;
+            text-align: center;
+        }
+        
+        .comparison-table tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .major-name {
+            text-align: left !important;
+            font-weight: 600;
+            color: #495057;
+            max-width: 250px;
+        }
+        
+        .year-count {
+            color: #495057;
+        }
+        
+        .year-count.zero {
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        .year-count.high {
+            background: #d4edda;
+            font-weight: 600;
+            color: #155724;
+        }
+        
+        .total-count {
+            font-weight: 600;
+            color: #fd7e14;
+        }
+        
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fd7e14;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #6c757d;
+        }
+        
+        .export-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .export-btn:hover {
+            background: #218838;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .comparison-table {
+                font-size: 12px;
+            }
+            
+            .comparison-table th,
+            .comparison-table td {
+                padding: 8px 6px;
+            }
+            
+            .major-name {
+                max-width: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>湖南大学 广东省 专业横向对比</h1>
+        <p>专业招生数量历年对比分析</p>
+    </div>
+    
+    <div class="nav-links">
+        <a href="/">📊 总览</a>
+        <a href="/guangdong">🎓 专业统计</a>
+        <a href="/departments">🏫 学院分析</a>
+        <span style="color: #6c757d;">专业招生数量横向对比表格</span>
+    </div>
+
+    <div class="controls">
+        <label for="keywordInput">专业筛选:</label>
+        <input type="text" id="keywordInput" placeholder="输入专业关键词"/>
+        
+        <label for="sortSelect">排序方式:</label>
+        <select id="sortSelect">
+            <option value="total">总招生数</option>
+            <option value="latest">最新年份</option>
+            <option value="name">专业名称</option>
+        </select>
+        
+        <button onclick="loadData()">查询</button>
+        <button onclick="exportToCSV()" class="export-btn">导出CSV</button>
+    </div>
+
+    <div id="summaryContainer" class="summary-stats"></div>
+    <div id="loadingMsg" class="loading">加载对比数据中...</div>
+    
+    <div id="tableContainer" class="table-container" style="display: none;">
+        <div class="table-header">
+            <h3 style="margin: 0;">专业招生对比表</h3>
+            <span id="tableInfo">显示所有专业</span>
+        </div>
+        <div style="overflow-x: auto; max-height: 600px; overflow-y: auto;">
+            <table class="comparison-table" id="comparisonTable">
+                <thead>
+                    <tr id="tableHeader">
+                        <!-- 表头将由JavaScript生成 -->
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- 表格内容将由JavaScript生成 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let currentData = null;
+
+        // 加载数据
+        async function loadData() {
+            const keyword = document.getElementById('keywordInput').value.trim();
+            const sortBy = document.getElementById('sortSelect').value;
+            
+            const params = new URLSearchParams();
+            if (keyword) params.append('keyword', keyword);
+            params.append('sort_by', sortBy);
+            
+            document.getElementById('loadingMsg').style.display = 'block';
+            document.getElementById('tableContainer').style.display = 'none';
+            document.getElementById('summaryContainer').innerHTML = '';
+            
+            try {
+                const response = await fetch(`/api/major_comparison?${params.toString()}`);
+                currentData = await response.json();
+                
+                displaySummary(currentData.summary);
+                displayTable(currentData);
+                
+                document.getElementById('loadingMsg').style.display = 'none';
+                document.getElementById('tableContainer').style.display = 'block';
+                
+                // 更新表格信息
+                const info = keyword ? `筛选 "${keyword}" 相关专业` : '显示所有专业';
+                document.getElementById('tableInfo').textContent = `${info} (${currentData.comparison_data.length}个)`;
+                
+            } catch (error) {
+                console.error('加载数据失败:', error);
+                document.getElementById('loadingMsg').textContent = '加载失败，请重试';
+            }
+        }
+
+        // 显示汇总信息
+        function displaySummary(summary) {
+            const container = document.getElementById('summaryContainer');
+            
+            container.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${summary.total_majors}</div>
+                    <div class="stat-label">专业数量</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${summary.total_students}</div>
+                    <div class="stat-label">总招生人数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${summary.years_covered.length}</div>
+                    <div class="stat-label">覆盖年份</div>
+                </div>
+            `;
+        }
+
+        // 显示对比表格
+        function displayTable(data) {
+            const years = data.years;
+            const comparisonData = data.comparison_data;
+            
+            // 生成表头
+            const header = document.getElementById('tableHeader');
+            header.innerHTML = `
+                <th class="major-name">专业名称</th>
+                ${years.map(year => `<th>${year}</th>`).join('')}
+                <th>总计</th>
+                <th>平均</th>
+                <th>最高</th>
+                <th>最低</th>
+            `;
+            
+            // 生成表格内容
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            comparisonData.forEach(row => {
+                const tr = document.createElement('tr');
+                
+                // 计算年份数据的最大值，用于高亮显示
+                const yearCounts = years.map(year => row.years[year] || 0);
+                const maxCount = Math.max(...yearCounts);
+                
+                tr.innerHTML = `
+                    <td class="major-name" title="${row.major}">${row.major}</td>
+                    ${years.map(year => {
+                        const count = row.years[year] || 0;
+                        let className = 'year-count';
+                        if (count === 0) className += ' zero';
+                        else if (count === maxCount && maxCount > 0) className += ' high';
+                        
+                        return `<td class="${className}">${count === 0 ? '-' : count}</td>`;
+                    }).join('')}
+                    <td class="total-count">${row.total}</td>
+                    <td>${row.average}</td>
+                    <td>${row.max_year}</td>
+                    <td>${row.min_year}</td>
+                `;
+                
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 导出CSV
+        function exportToCSV() {
+            if (!currentData) {
+                alert('请先加载数据');
+                return;
+            }
+            
+            const years = currentData.years;
+            const data = currentData.comparison_data;
+            
+            // 构建CSV内容
+            let csv = '专业名称,' + years.join(',') + ',总计,平均,最高,最低\\n';
+            
+            data.forEach(row => {
+                const yearData = years.map(year => row.years[year] || 0).join(',');
+                csv += `"${row.major}",${yearData},${row.total},${row.average},${row.max_year},${row.min_year}\\n`;
+            });
+            
+            // 下载文件
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', '湖南大学广东省专业招生对比.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 回车键搜索
+        document.getElementById('keywordInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                loadData();
+            }
+        });
+
+        // 初始化
+        loadData();
+    </script>
+</body>
+</html> 

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <title>湖南大学 广东省 招生数据分析</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 2rem;
+            background-color: #f8f9fa;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .nav-links {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .nav-links a {
+            color: #007bff;
+            text-decoration: none;
+            margin-right: 1rem;
+            padding: 0.5rem 1rem;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #007bff;
+        }
+        
+        .nav-links a:hover {
+            background: #007bff;
+            color: white;
+        }
+        
+        .controls {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .controls label {
+            font-weight: 600;
+            color: #495057;
+            margin-right: 0.5rem;
+        }
+        
+        .controls select, .controls input {
+            padding: 8px 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 5px;
+            font-size: 14px;
+            margin-right: 1rem;
+        }
+        
+        .chart-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .stat-label {
+            color: #6c757d;
+            margin-top: 0.5rem;
+        }
+        
+        canvas {
+            max-width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>湖南大学 广东省 招生数据分析</h1>
+        <p>2020-2025年广东省招生统计与趋势分析</p>
+    </div>
+    
+    <div class="nav-links">
+        <a href="/guangdong">📊 专业详细统计</a>
+        <a href="/departments">🏫 学院分析</a>
+        <a href="/comparison">📈 专业对比</a>
+        <span style="color: #6c757d;">查看不同维度的招生数据分析</span>
+    </div>
+
+    <div id="statsContainer" class="stats-container">
+        <!-- 统计卡片将由JavaScript填充 -->
+    </div>
+
+    <div class="controls">
+        <label for="yearSelect">选择年份: </label>
+        <select id="yearSelect">
+            {% for y in years %}
+            <option value="{{ y }}" {% if y == years[-1] %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+        </select>
+        
+        <label for="keywordInput">专业筛选: </label>
+        <input type="text" id="keywordInput" placeholder="输入专业关键词后回车"/>
+    </div>
+
+    <div class="chart-container">
+        <h3>年度招生总人数趋势</h3>
+        <canvas id="yearChart" height="120"></canvas>
+    </div>
+
+    <div class="chart-container">
+        <h3 id="majorChartTitle">专业招生分布 (所选年度)</h3>
+        <canvas id="majorChart" height="160"></canvas>
+    </div>
+
+    <script>
+        const yearSelect = document.getElementById('yearSelect');
+        const keywordInput = document.getElementById('keywordInput');
+
+        let yearChart, majorChart;
+
+        // 加载统计信息
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+                
+                const container = document.getElementById('statsContainer');
+                container.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.total_records}</div>
+                        <div class="stat-label">总记录数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.total_majors}</div>
+                        <div class="stat-label">专业数量</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.total_students}</div>
+                        <div class="stat-label">总招生人数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.years_covered.length}</div>
+                        <div class="stat-label">覆盖年份</div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('加载统计信息失败:', error);
+            }
+        }
+
+        // 获取分析数据
+        function fetchData() {
+            const params = new URLSearchParams();
+            params.append('year', yearSelect.value);
+            if (keywordInput.value.trim()) {
+                params.append('keyword', keywordInput.value.trim());
+            }
+            
+            fetch(`/api/analysis?${params.toString()}`)
+                .then(r => r.json())
+                .then(drawCharts)
+                .catch(error => {
+                    console.error('获取数据失败:', error);
+                });
+        }
+
+        function drawCharts(data) {
+            // 年度趋势图
+            const years = Object.keys(data.year_totals);
+            const totals = Object.values(data.year_totals);
+
+            if (yearChart) yearChart.destroy();
+            yearChart = new Chart(
+                document.getElementById('yearChart').getContext('2d'),
+                {
+                    type: 'line',
+                    data: {
+                        labels: years,
+                        datasets: [{
+                            label: '总招生人数',
+                            data: totals,
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            fill: true,
+                            tension: 0.1,
+                            pointBackgroundColor: '#667eea',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                            }
+                        }
+                    }
+                }
+            );
+
+            // 专业分布图
+            const majors = Object.keys(data.major_totals);
+            const majorCounts = Object.values(data.major_totals);
+            
+            document.getElementById('majorChartTitle').textContent = 
+                `专业招生分布 (${data.selected_year}年)`;
+            
+            if (majorChart) majorChart.destroy();
+            majorChart = new Chart(
+                document.getElementById('majorChart').getContext('2d'),
+                {
+                    type: 'bar',
+                    data: {
+                        labels: majors,
+                        datasets: [{
+                            label: `${data.selected_year}年招生人数`,
+                            data: majorCounts,
+                            backgroundColor: '#28a745'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        indexAxis: 'y',
+                        scales: {
+                            x: {
+                                beginAtZero: true
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    title: function(context) {
+                                        return context[0].label;
+                                    },
+                                    label: function(context) {
+                                        return `招生人数: ${context.parsed.x}`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            );
+        }
+
+        // 初始化
+        loadStats();
+        fetchData();
+
+        // 事件监听
+        yearSelect.addEventListener('change', fetchData);
+        keywordInput.addEventListener('keypress', e => {
+            if (e.key === 'Enter') {
+                fetchData();
+            }
+        });
+    </script>
+</body>
+</html> 
